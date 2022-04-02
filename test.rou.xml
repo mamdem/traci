@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2022-02-15 16:12:26 by Eclipse SUMO netedit Version 1.9.2
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="C:\test%20SUMO\traciTests\test.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="C:\test%20SUMO\traciTests\test.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.min-radius.fix.railways value="false"/>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-internal-links value="false"/>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <netedit>
+        <additional-files value="C:\test%20SUMO\traciTests\test.add.xml"/>
+        <route-files value="C:\test%20SUMO\traciTests\test.rou.xml"/>
+    </netedit>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <route edges="gneE0 gneE10 gneE8.45 gneE7 gneE7.47 gneE2.120" color="yellow" id="cices_citeKG"/>
+    <route edges="gneE0 gneE0.81 gneE0.329" color="green" id="cices_fann"/>
+    <route edges="gneE0 gneE10 gneE8.45 gneE12 gneE0.329" color="255,114,0" id="cices_fann_DDD"/>
+    <route edges="gneE0 gneE10 gneE8.45 -gneE2.115" color="yellow" id="cices_mermoz"/>
+    <route edges="-gneE2 gneE11 gneE1.309" color="blue" id="citeKG_cices"/>
+    <route edges="-gneE2 gneE8 gneE8.45 gneE12 gneE0.329" color="yellow" id="citeKG_fann"/>
+    <route edges="-gneE2 gneE8 gneE8.45 -gneE2.115" color="magenta" id="citeKG_mermoz"/>
+    <route edges="gneE1 gneE1.30 gneE1.309" color="cyan" id="fann_cices"/>
+    <route edges="gneE1 gneE9 gneE7.47 gneE11 gneE1.309" color="255,78,0" id="fann_cices_DDD"/>
+    <route edges="gneE1 gneE9 gneE7.47 gneE2.120" color="red" id="fann_citeKG"/>
+    <route edges="gneE1 gneE9 gneE7.47 gneE8 gneE8.45 -gneE2.115" color="yellow" id="fann_mermoz"/>
+    <route edges="gneE2 gneE7 gneE7.47 gneE11 gneE1.309" color="yellow" id="mermoz_cices"/>
+    <route edges="gneE2 gneE7 gneE7.47 gneE2.120" color="yellow" id="mermoz_citeKG"/>
+    <route edges="gneE2 gneE12 gneE0.329" color="yellow" id="mermoz_fann"/>
+    <route edges="gneE13 gneE13.25 gneE13.43" color="255,70,0" id="pietons_citeKG"/>
+</routes>

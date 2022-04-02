@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2022-02-15 17:39:51 by Eclipse SUMO netedit Version 1.9.2
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="C:\test%20SUMO\traciTests\test.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="C:\test%20SUMO\traciTests\test.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.min-radius.fix.railways value="false"/>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-internal-links value="false"/>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <netedit>
+        <additional-files value="C:\test%20SUMO\traciTests\test.add.xml"/>
+        <route-files value="C:\test%20SUMO\traciTests\test.rou.xml"/>
+    </netedit>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <busStop id="busStop_1" lane="gneE0_0" startPos="143.32" endPos="163.32" personCapacity="30" parkingLength="30.00"/>
+    <busStop id="busStop_2" lane="gneE10_0" startPos="2.83" endPos="17.83" friendlyPos="1" personCapacity="30" parkingLength="30.00"/>
+    <busStop id="busStop_3" lane="gneE12_0" startPos="54.91" endPos="74.91" friendlyPos="1" personCapacity="30" parkingLength="30.00"/>
+    <busStop id="busStop_4" lane="gneE9_0" startPos="89.66" endPos="109.66" friendlyPos="1" personCapacity="30" parkingLength="30.00"/>
+    <busStop id="busStop_5" lane="gneE11_0" startPos="22.25" endPos="37.25" friendlyPos="1" personCapacity="30" parkingLength="30.00"/>
+    <busStop id="busStop_6" lane="gneE1.309_0" startPos="10.97" endPos="30.97" personCapacity="30" parkingLength="30.00"/>
+</additional>
