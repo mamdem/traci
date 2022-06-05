@@ -90,7 +90,7 @@ def generate(filename, firstDepart = 1, lastDepart = 3600, minStopDuration = 5, 
 			for k in range(data[r][t]):
 				id += 1
 				depart = firstDepart + ((k * pas_des_departs) % duree)
-				xml = '\n<vehicle id="v' + str(id) + '" type="' + t + '" route="' + r + '" depart="' + str(depart) + '" departSpeed="speedLimit"'
+				xml = '\n<vehicle jmCrossingGap="20" id="v' + str(id) + '" type="' + t + '" route="' + r + '" depart="' + str(depart) + '" departSpeed="speedLimit"'
 				if(t == 'Particulier'):
 					xml += ' personNumber="' + str(random.randint(1, 2)) +'"/>'
 				elif(t == 'Taxi'):

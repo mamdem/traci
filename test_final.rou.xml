@@ -1,9 +1,17 @@
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-<vType id="DakarDemDikk" accel="2.6" decel="4" sigma="0" length="12" width="2.6" minGap="2.5" maxSpeed="20" color="240,230,140" guiShape="bus" personCapacity="85" emissionClass="HBEFA3/HDV_D_EU4" laneChangeModel="LC2013" lcStrategic="1" lcSpeedGain="1" lcOvertakeRight="1" lcOpposite="0"/>
-<vType id="TATA" accel="2" decel="4" sigma="0.3" length="9" minGap="1.5" width="2.4" maxSpeed="17" color="255,255,255"   guiShape="bus" personCapacity="42"  emissionClass="HBEFA3/HDV_D_EU4" laneChangeModel="LC2013" lcStrategic="3" lcSpeedGain="3" lcOvertakeRight="3" lcOpposite="3" lcImpatience="0.1" />
-<vType id="Taxi"  accel="2.6" decel="4.5" sigma="0.4" length="4.5"  minGap="1" maxSpeed="20" color="255,255,0" guiShape="passenger" personCapacity="5"  emissionClass="HBEFA3/PC_D_EU3" laneChangeModel="LC2013" lcStrategic="5"  lcSpeedGain="5" lcOvertakeRight="0.5" lcOpposite="5" lcImpatience="0.5" />
-<vType id="CarRapide" accel="1.2" decel="3.5" sigma="0.6" length="7" width="2.1" minGap="1" maxSpeed="14" color="255,127,80" guiShape="bus" personCapacity="28" emissionClass="HBEFA3/LDV_G_EU1" laneChangeModel="LC2013" lcStrategic="3"  lcSpeedGain="3" lcOvertakeRight="0.1" lcOpposite="3" lcImpatience="1"/>
-<vType id="Particulier"  accel="3.5" color="0,0,255" decel="4.5" guiShape="passenger"  length="4.5" maxSpeed="25" sigma="0.1" minGap="1.5" personCapacity="5" emissionClass="HBEFA3/PC" laneChangeModel="LC2013" lcStrategic="2"  lcSpeedGain="2" lcOvertakeRight="0.3" lcOpposite="3"/>
+<vType jmCrossingGap="20.0" id="DakarDemDikk" accel="2.6" decel="4" sigma="0" length="12" width="2.6" minGap="2.5" maxSpeed="20" color="240,230,140" guiShape="bus" personCapacity="85" emissionClass="HBEFA3/HDV_D_EU4" laneChangeModel="LC2013" lcStrategic="1" lcSpeedGain="1" lcOvertakeRight="1" lcOpposite="0"/>
+<vType jmCrossingGap="20.0" id="TATA" accel="2" decel="4" sigma="0.3" length="9" minGap="1.5" width="2.4" maxSpeed="17" color="255,255,255"   guiShape="bus" personCapacity="42"  emissionClass="HBEFA3/HDV_D_EU4" laneChangeModel="LC2013" lcStrategic="3" lcSpeedGain="3" lcOvertakeRight="3" lcOpposite="3" lcImpatience="0.1" />
+<vType jmCrossingGap="20.0" id="Taxi"  accel="2.6" decel="4.5" sigma="0.4" length="4.5"  minGap="1" maxSpeed="20" color="255,255,0" guiShape="passenger" personCapacity="5"  emissionClass="HBEFA3/PC_D_EU3" laneChangeModel="LC2013" lcStrategic="5"  lcSpeedGain="5" lcOvertakeRight="0.5" lcOpposite="5" lcImpatience="0.5" />
+<vType jmCrossingGap="20.0" id="CarRapide" accel="1.2" decel="3.5" sigma="0.6" length="7" width="2.1" minGap="1" maxSpeed="14" color="255,127,80" guiShape="bus" personCapacity="28" emissionClass="HBEFA3/LDV_G_EU1" laneChangeModel="LC2013" lcStrategic="3"  lcSpeedGain="3" lcOvertakeRight="0.1" lcOpposite="3" lcImpatience="1"/>
+<vType jmCrossingGap="20.0" id="Particulier"  accel="3.5" color="0,0,255" decel="4.5" guiShape="passenger"  length="4.5" maxSpeed="25" sigma="0.1" minGap="1.5" personCapacity="5" emissionClass="HBEFA3/PC" laneChangeModel="LC2013" lcStrategic="2"  lcSpeedGain="2" lcOvertakeRight="0.3" lcOpposite="3"/>
+
+<!-- Les types de personne -->
+<vType length="0.3" width="0.3" color="red" id="jeune-femme" impatience="0.8" maxSpeed="2.0" />
+<vType length="0.3" width="0.3" color="blue" id="jeune-homme" impatience="0.7" maxSpeed="2.0" />
+<vType length="0.5" width="0.3" color="blue" id="homme-adulte" impatience="0.7" maxSpeed="4.0" />
+<vType length="0.5" width="0.3" color="red" id="femme-adulte" impatience="0.7" maxSpeed="3.0" />
+<vType length="0.7" width="0.3" color="blue" id="vieux-homme" impatience="0.7" maxSpeed="2.0" />
+<vType length="0.7" width="0.3" color="red" id="vielle-femme" impatience="0.7" maxSpeed="1.0" />
 
 <route edges="gneE0 gneE10 gneE8.45 gneE7 gneE7.47 gneE2.120" color="yellow" id="cices_citeKG"/>    
 <route edges="gneE0 gneE0.81 gneE0.329" color="green" id="cices_fann"/>    

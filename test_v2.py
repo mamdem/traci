@@ -1,13 +1,23 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
-
 # See: https://sumo.dlr.de/docs/TraCI/Interfacing_TraCI_from_Python.html
 
 from itertools import count
 import os
 from re import T
 import sys
-# import optparse
+import numpy
+import tensorflow
+from statistics import mode
+import matplotlib.pyplot as plt
+from numpy import array
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import LSTM
+from keras.layers import Dense
+from numpy import hstack
 
 if 'SUMO_HOME' in os.environ:
 	tools = os.path.join(os.environ['SUMO_Home'], 'tools')
@@ -25,15 +35,44 @@ import random
 class PedestrianManager(traci.StepListener):
 	def __init__(self, fromEdge, toEdge, pedestrianPrefixedID = 'person.1.', pedestrianProbability = 1.0, pedestrianNumberByStep = [1, 5]):
 		# traci.StepListener.__init__(self)
+		self.model = Sequential()
+		self.data = pd.read_excel("C:/Users/MHD/Desktop/traciTests/traci.xlsx")
 		self.fromEdge = fromEdge
 		self.toEdge = toEdge
 		self.pedestrianPrefixedID = pedestrianPrefixedID
 		self.pedestrianProbability = pedestrianProbability
 		self.pedestrianNumberByStep = pedestrianNumberByStep
 		self.vehicles = {}
+		self.waitPedestrian=[]
 		self.nbArrived = 0
 		self.count = 0
+		self.n_features = 1
+		self.X, self.Y="",""
+		self.initializeLSTM()
+		self.te=0
+		
 	
+	def initializeLSTM(self):
+		self.X, self.Y = self.sampling()
+		for i in range(len(self.X)):
+			print(self.X[i], self.Y[i])
+		print(self.data.shape)
+
+		self.n_features = 1
+
+		self.X = self.X.reshape((self.X.shape[0], self.X.shape[1], self.n_features))
+		
+		self.model.add(LSTM(50, activation='relu', input_shape=(None, self.n_features)))
+		self.model.add(Dense(1))
+		self.model.compile(optimizer='adam', loss='mse')
+
+		# reshape from [samples, timesteps] into [samples, timesteps, features]
+		self.model.summary()
+
+		# fit model
+		self.model.fit(self.X, self.Y, epochs=200, verbose=0)
+
+
 	def step(self, t = 0):
 		# Listening simulation's evolution
 		#The list of ids of vehicles which arrived (have reached their destination and are removed from the road network) in this time step.
@@ -134,18 +173,37 @@ class PedestrianManager(traci.StepListener):
 			self.vehicles.pop(id, None)
 		# Adding new pedestrians
 		self.generatePedestrians()
+		
 		# indicate that the step listener should stay active in the next step
 		return True
+	
+	def sampling(self):    
+		X, Y = list(), list()
+
+		for i in range(5):
+			x= list()
+			x.append(self.data['genre'][i])
+			x.append(self.data['jeune'][i])
+			x.append(self.data['tps_patience'][i])
+			x.append(self.data['vitesse'][i])
+			x.append(self.data['distance'][i])
+			x.append(self.data['pieton_engage'][i])
+
+			X.append(x)
+			Y.append(self.data['engagement'][i])
+		return array(X), array(Y)
 	
 	def generatePedestrians(self):
 		# Adding new pedestrians
 		#return
-		print("yess")
+		self.te+=1
 		try:
 			rand = random.random()
+			
 			if((rand < self.pedestrianProbability) and ((self.pedestrianPrefixedID != None) and (len(self.pedestrianPrefixedID)>0) and (self.pedestrianNumberByStep != None) and (len(self.pedestrianNumberByStep)>0))):
 				if(len(self.pedestrianNumberByStep) == 1):
-					nb = self.pedestrianNumberByStep[0]
+					#nb = self.pedestrianNumberByStep[0]
+					nb = random.randint(self.pedestrianNumberByStep[0], self.pedestrianNumberByStep[1])
 				else:
 					nb = random.randint(self.pedestrianNumberByStep[0], self.pedestrianNumberByStep[1])
 				if(nb <= 0):
@@ -153,10 +211,56 @@ class PedestrianManager(traci.StepListener):
 				for i in range(nb):
 					self.count += 1
 					personID = self.pedestrianPrefixedID + str(self.count)
+					value = numpy.random.random(1)[0]
+					
 					traci.person.add(personID, self.fromEdge, 0)
 					traci.person.appendWalkingStage(personID, [self.fromEdge, self.toEdge], tc.ARRIVALFLAG_POS_MAX)
-					#### C'EST LA OU ON GENERE LES PIETONS UN A UN
-					print(self.count)
+					# traci.person.appendWaitingStage(personID, 22)
+					if(value>0.5):
+						traci.person.setType(personID, "homme-adulte")
+					else:
+						traci.person.setType(personID, "femme-adulte")
+					self.waitPedestrian.append(personID)
+					
+			# Liste de tous les vehicule
+			vehicles = traci.edge.getLastStepVehicleIDs("gneE0")
+			# Le vehicule le plus proche
+			nearest_vehicle = vehicles[len(vehicles)-1]
+			# print(nearest_vehicle)
+			
+			# Distance entre le vehicule (le plus proche du pieton) et le piéton
+			dist = 174.68-traci.vehicle.getDistance(nearest_vehicle)  
+			# Vitesse du véhicule le plus proche des piétons
+			speed = traci.vehicle.getSpeed(nearest_vehicle)
+
+			# print(vehicles)
+			# print(nearest_vehicle)
+			# print(dist)
+			# print(speed)
+			# print("-----------")
+			for i in range(len(self.waitPedestrian)):
+				if (traci.person.getLanePosition(self.waitPedestrian[i])>=18.0):
+					traci.person.setSpeed(self.waitPedestrian[i],0.0)
+
+			if (traci.person.getLanePosition(self.waitPedestrian[0])>=18.0):
+				genre = random.randint(0,1)
+				age = random.randint(1,3)
+				x_input = array([genre,age, self.te,speed,dist, 0])
+				print(1,2,self.te,speed, dist,0)
+				x_input = x_input.reshape((1, 6, self.n_features))
+				yhat = self.model.predict(x_input, verbose=0)
+				print(yhat)
+				print("\n\n================================")
+				if(yhat[0][0]>0.5):
+					for i in range(len(self.waitPedestrian)):
+						traci.person.setSpeed(self.waitPedestrian[i],4.0)
+						# print("#######################  TIME WAITING  ################################")
+						# print(traci.person.getWaitingTime(self.waitPedestrian[i]))
+					self.waitPedestrian.clear()
+					self.te=0
+			# if(traci.person.getLanePosition(self.pedestrianPrefixedID + str(self.count-1))>13.0):
+			# 	traci.person.setSpeed(self.pedestrianPrefixedID + str(self.count - 1),0.0)
+			# 	self.waitPedestrian.append(self.pedestrianPrefixedID + str(self.count - 1))
 		except Exception as exc:
 			print(exc)
 
@@ -167,7 +271,8 @@ def main():
 	traci.gui.setZoom('View #0', zoom*2.0)
 	# Defining the edges for the pedestrians walk
 	fromEdge = "gneE13"
-	toEdge = "gneE13.43"
+	toEdge = "gneE13.25"
+	data = pd.read_excel("C:/Users/MHD/Desktop/traciTests/traci.xlsx")
 	# Initializing a PedestrianManager object
 	# pedestrianManager = PedestrianManager(fromEdge, toEdge, pedestrianPrefixedID = 'person.', pedestrianProbability = 0.1, pedestrianNumberByStep = [1, 5])
 	pedestrianManager = PedestrianManager(fromEdge, toEdge, pedestrianPrefixedID = 'person.', pedestrianProbability = 0.1, pedestrianNumberByStep = [0, 2])
@@ -187,3 +292,5 @@ def main():
 		print(exc)
 
 main()
+
+#https://sumo.dlr.de/pydoc/traci._person.html#PersonDomain-replaceStage
