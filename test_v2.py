@@ -31,6 +31,7 @@ sumoCmd = [sumoBinary, "-c", "C:\\Users\MHD\\Desktop\\traciTests\\SUMO.sumo.cfg"
 import traci
 import traci.constants as tc
 import random
+import Pedestrian as ped
 
 class PedestrianManager(traci.StepListener):
 	def __init__(self, fromEdge, toEdge, pedestrianPrefixedID = 'person.1.', pedestrianProbability = 1.0, pedestrianNumberByStep = [1, 5]):
@@ -43,7 +44,12 @@ class PedestrianManager(traci.StepListener):
 		self.pedestrianProbability = pedestrianProbability
 		self.pedestrianNumberByStep = pedestrianNumberByStep
 		self.vehicles = {}
-		self.waitPedestrian=[]
+		self.allPedestrians=[]
+		self.dictAllPedestrian={}
+		self.waitPedestrians=[]
+		self.dictWaitPedestrian={}
+		self.engagePedestrians=[]
+		self.dictEngagePedestrians={}
 		self.nbArrived = 0
 		self.count = 0
 		self.n_features = 1
@@ -58,6 +64,7 @@ class PedestrianManager(traci.StepListener):
 			print(self.X[i], self.Y[i])
 		print(self.data.shape)
 
+		
 		self.n_features = 1
 
 		self.X = self.X.reshape((self.X.shape[0], self.X.shape[1], self.n_features))
@@ -188,7 +195,6 @@ class PedestrianManager(traci.StepListener):
 			x.append(self.data['vitesse'][i])
 			x.append(self.data['distance'][i])
 			x.append(self.data['pieton_engage'][i])
-
 			X.append(x)
 			Y.append(self.data['engagement'][i])
 		return array(X), array(Y)
@@ -197,6 +203,7 @@ class PedestrianManager(traci.StepListener):
 		# Adding new pedestrians
 		#return
 		self.te+=1
+		print("###################### Etape "+str(self.te)+"  ##################################")
 		try:
 			rand = random.random()
 			
@@ -211,56 +218,121 @@ class PedestrianManager(traci.StepListener):
 				for i in range(nb):
 					self.count += 1
 					personID = self.pedestrianPrefixedID + str(self.count)
-					value = numpy.random.random(1)[0]
-					
+					randGenre = random.randint(0,1)
+					randAge = random.randint(1,5)
 					traci.person.add(personID, self.fromEdge, 0)
+									
 					traci.person.appendWalkingStage(personID, [self.fromEdge, self.toEdge], tc.ARRIVALFLAG_POS_MAX)
 					# traci.person.appendWaitingStage(personID, 22)
-					if(value>0.5):
+				
+					if(randGenre==1 and randAge>1 and randAge<5):
 						traci.person.setType(personID, "homme-adulte")
-					else:
+					elif (randGenre==0 and randAge>1 and randAge<5):
 						traci.person.setType(personID, "femme-adulte")
-					self.waitPedestrian.append(personID)
+					elif (randGenre==0 and randAge==1):
+						traci.person.setType(personID, "jeune-femme")
+					elif (randGenre==1 and randAge==1):
+						traci.person.setType(personID, "jeune-homme")
+					elif (randGenre==0 and randAge==5):
+						traci.person.setType(personID, "vielle-femme")
+					elif (randGenre==1 and randAge==5):
+						traci.person.setType(personID, "vieux-homme")
 					
-			# Liste de tous les vehicule
-			vehicles = traci.edge.getLastStepVehicleIDs("gneE0")
-			# Le vehicule le plus proche
-			nearest_vehicle = vehicles[len(vehicles)-1]
-			# print(nearest_vehicle)
+
+					self.dictAllPedestrian[personID]=ped.Pedestrian(personID, randGenre, randAge, 0,2.0)
+					# On ajoute le piéton avec ses propriétés dans la liste des Pedestians
+					# self.allPedestrians.append(ped.Pedestrian(personID, genre, ))
+					
+					
 			
-			# Distance entre le vehicule (le plus proche du pieton) et le piéton
-			dist = 174.68-traci.vehicle.getDistance(nearest_vehicle)  
-			# Vitesse du véhicule le plus proche des piétons
-			speed = traci.vehicle.getSpeed(nearest_vehicle)
 
-			# print(vehicles)
-			# print(nearest_vehicle)
-			# print(dist)
-			# print(speed)
-			# print("-----------")
-			for i in range(len(self.waitPedestrian)):
-				if (traci.person.getLanePosition(self.waitPedestrian[i])>=18.0):
-					traci.person.setSpeed(self.waitPedestrian[i],0.0)
+			self.waitPedestrians.clear()
+			self.dictWaitPedestrian={}
+			for key, value in self.dictAllPedestrian.items():
+				if(traci.person.getLanePosition(key)>=18.0):
+					traci.person.setSpeed(key, 0.0)
+					self.dictWaitPedestrian[key]=value
+			# for i in range(len(self.allPedestrians)):
+			# 	if (traci.person.getLanePosition(self.allPedestrians[i])>=18.0):
+			# 		traci.person.setSpeed(self.allPedestrians[i],0.0)
+			# 		self.waitPedestrians.append(self.allPedestrians[i])
+				
+			# # On supprime les piétons en attentes dans la liste de tous les piétons
 
-			if (traci.person.getLanePosition(self.waitPedestrian[0])>=18.0):
-				genre = random.randint(0,1)
-				age = random.randint(1,3)
-				x_input = array([genre,age, self.te,speed,dist, 0])
-				print(1,2,self.te,speed, dist,0)
-				x_input = x_input.reshape((1, 6, self.n_features))
-				yhat = self.model.predict(x_input, verbose=0)
-				print(yhat)
-				print("\n\n================================")
-				if(yhat[0][0]>0.5):
-					for i in range(len(self.waitPedestrian)):
-						traci.person.setSpeed(self.waitPedestrian[i],4.0)
-						# print("#######################  TIME WAITING  ################################")
-						# print(traci.person.getWaitingTime(self.waitPedestrian[i]))
-					self.waitPedestrian.clear()
-					self.te=0
+
+			engaged=0			
+			for key, value in self.dictWaitPedestrian.items():
+				# print(str(len(self.waitPedestrians))+" sont en attentes")
+				self.dictWaitPedestrian[key].setWaitingTime(value.getWaitingTime()+1)
+				if (traci.person.getLanePosition(key)>=18.0):
+					genre = random.randint(0,1)
+					age = random.randint(1,3)
+					# Liste de tous les vehicule
+					vehicles = traci.edge.getLastStepVehicleIDs("gneE0")
+					# Le vehicule le plus proche
+					nearest_vehicle = vehicles[len(vehicles)-1]
+					# Distance entre le vehicule (le plus proche du pieton) et le piéton
+					dist = 174.68-traci.vehicle.getDistance(nearest_vehicle)  
+					# Vitesse du véhicule le plus proche des piétons
+					speed_vehicle = traci.vehicle.getSpeed(nearest_vehicle)
+					x_input = array([genre,value.age, value.waitingTime,speed_vehicle,dist, len(self.dictEngagePedestrians)])
+					print(genre,value.age, value.waitingTime,value.travelSpeed,dist, engaged)
+					x_input = x_input.reshape((1, 6, self.n_features))
+					yhat = self.model.predict(x_input, verbose=0)
+					print(yhat)
+					print("\n\n-------")
+					if(yhat[0][0]>0.5):
+						traci.person.setSpeed(key,3.0)
+						# self.dictEngagePedestrians[key]=value
+						del self.dictAllPedestrian[key]
+						engaged+=1
+						
+			# On supprime les piétons déjà enagés dans la liste des piétons en attente
+			for key, value in self.dictEngagePedestrians.items():
+				if(key in self.dictWaitPedestrian):
+					del self.dictWaitPedestrian[key]
+
+			# # On supprime les piétons qui ont atteint leurs destinations dans la liste des piétons engagés
+			# for key, value in self.dictEngagePedestrians.items():
+			# 	if(traci.person.getLanePosition(key)>25):
+			# 		traci.person.setSpeed(key, 0.0)
+
+
+			# for i in range(len(self.waitPedestrians)):
+			# 	if(self.waitPedestrians[i]==self.allPedestrians[i]):
+
+			# 		for i in range(len(self.waitPedestrians)):
+			# 			# print(str(len(self.waitPedestrians))+" sont en attentes")
+			# 			if (traci.person.getLanePosition(self.waitPedestrians[i])>=18.0):
+			# 				genre = random.randint(0,1)
+			# 				age = random.randint(1,3)
+			# 				# Liste de tous les vehicule
+			# 				vehicles = traci.edge.getLastStepVehicleIDs("gneE0")
+			# 				# Le vehicule le plus proche
+			# 				nearest_vehicle = vehicles[len(vehicles)-1]
+			# 				# Distance entre le vehicule (le plus proche du pieton) et le piéton
+			# 				dist = 174.68-traci.vehicle.getDistance(nearest_vehicle)  
+			# 				# Vitesse du véhicule le plus proche des piétons
+			# 				speed = traci.vehicle.getSpeed(nearest_vehicle)
+			# 				x_input = array([genre,2, 9,speed,dist, 0])
+			# 				print(genre,2,9,speed, dist,3)
+			# 				x_input = x_input.reshape((1, 6, self.n_features))
+			# 				yhat = self.model.predict(x_input, verbose=0)
+			# 				print(yhat)
+			# 				print("\n\n-------")
+			# 				if(yhat[0][0]>0.5):
+			# 					# for i in range(len(self.allPedestrians)):
+			# 					traci.person.setSpeed(self.waitPedestrians[i],4.0)
+			# 					self.allPedestrians.remove(self.waitPedestrians[i])
+								
+			# for i in range(self.engagePedestrians):
+			# 	if(self.engagePedestrians[i]==self.waitPedestrians[i]):
+			# 		self.waitPedestrians.remove(self.engagePedestrians[i])
+			# 		self.allPedestrians.remove(self.engagePedestrians[i])
+
 			# if(traci.person.getLanePosition(self.pedestrianPrefixedID + str(self.count-1))>13.0):
 			# 	traci.person.setSpeed(self.pedestrianPrefixedID + str(self.count - 1),0.0)
-			# 	self.waitPedestrian.append(self.pedestrianPrefixedID + str(self.count - 1))
+			# 	self.allPedestrians.append(self.pedestrianPrefixedID + str(self.count - 1))
 		except Exception as exc:
 			print(exc)
 
