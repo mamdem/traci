@@ -32,6 +32,7 @@ import traci
 import traci.constants as tc
 import random
 import Pedestrian as ped
+import Rnn as rnn
 
 class PedestrianManager(traci.StepListener):
 	def __init__(self, fromEdge, toEdge, pedestrianPrefixedID = 'person.1.', pedestrianProbability = 1.0, pedestrianNumberByStep = [1, 5]):
@@ -54,31 +55,10 @@ class PedestrianManager(traci.StepListener):
 		self.count = 0
 		self.n_features = 1
 		self.X, self.Y="",""
-		self.initializeLSTM()
+		self.rnn = rnn.Rnn(self.data)
+		self.rnn.initializeLSTM()
+		# self.initializeLSTM()
 		self.te=0
-		
-	
-	def initializeLSTM(self):
-		self.X, self.Y = self.sampling()
-		for i in range(len(self.X)):
-			print(self.X[i], self.Y[i])
-		print(self.data.shape)
-
-		
-		self.n_features = 1
-
-		self.X = self.X.reshape((self.X.shape[0], self.X.shape[1], self.n_features))
-		
-		self.model.add(LSTM(50, activation='relu', input_shape=(None, self.n_features)))
-		self.model.add(Dense(1))
-		self.model.compile(optimizer='adam', loss='mse')
-
-		# reshape from [samples, timesteps] into [samples, timesteps, features]
-		self.model.summary()
-
-		# fit model
-		self.model.fit(self.X, self.Y, epochs=200, verbose=0)
-
 
 	def step(self, t = 0):
 		# Listening simulation's evolution
@@ -184,20 +164,6 @@ class PedestrianManager(traci.StepListener):
 		# indicate that the step listener should stay active in the next step
 		return True
 	
-	def sampling(self):    
-		X, Y = list(), list()
-
-		for i in range(5):
-			x= list()
-			x.append(self.data['genre'][i])
-			x.append(self.data['jeune'][i])
-			x.append(self.data['tps_patience'][i])
-			x.append(self.data['vitesse'][i])
-			x.append(self.data['distance'][i])
-			x.append(self.data['pieton_engage'][i])
-			X.append(x)
-			Y.append(self.data['engagement'][i])
-		return array(X), array(Y)
 	
 	def generatePedestrians(self):
 		# Adding new pedestrians
@@ -237,14 +203,9 @@ class PedestrianManager(traci.StepListener):
 						traci.person.setType(personID, "vielle-femme")
 					elif (randGenre==1 and randAge==5):
 						traci.person.setType(personID, "vieux-homme")
-					
-
 					self.dictAllPedestrian[personID]=ped.Pedestrian(personID, randGenre, randAge, 0,2.0)
 					# On ajoute le piéton avec ses propriétés dans la liste des Pedestians
-					# self.allPedestrians.append(ped.Pedestrian(personID, genre, ))
-					
-					
-			
+					# self.allPedestrians.append(ped.Pedestrian(personID, genre, ))			
 
 			self.waitPedestrians.clear()
 			self.dictWaitPedestrian={}
@@ -252,14 +213,7 @@ class PedestrianManager(traci.StepListener):
 				if(traci.person.getLanePosition(key)>=18.0):
 					traci.person.setSpeed(key, 0.0)
 					self.dictWaitPedestrian[key]=value
-			# for i in range(len(self.allPedestrians)):
-			# 	if (traci.person.getLanePosition(self.allPedestrians[i])>=18.0):
-			# 		traci.person.setSpeed(self.allPedestrians[i],0.0)
-			# 		self.waitPedestrians.append(self.allPedestrians[i])
-				
-			# # On supprime les piétons en attentes dans la liste de tous les piétons
-
-
+		
 			engaged=0			
 			for key, value in self.dictWaitPedestrian.items():
 				# print(str(len(self.waitPedestrians))+" sont en attentes")
@@ -277,8 +231,9 @@ class PedestrianManager(traci.StepListener):
 					speed_vehicle = traci.vehicle.getSpeed(nearest_vehicle)
 					x_input = array([genre,value.age, value.waitingTime,speed_vehicle,dist, len(self.dictEngagePedestrians)])
 					print(genre,value.age, value.waitingTime,value.travelSpeed,dist, engaged)
-					x_input = x_input.reshape((1, 6, self.n_features))
-					yhat = self.model.predict(x_input, verbose=0)
+					# x_input = x_input.reshape((1, 6, self.n_features))
+					# yhat = self.model.predict(x_input, verbose=0)
+					yhat = self.rnn.predictPassage(x_input)
 					print(yhat)
 					print("\n\n-------")
 					if(yhat[0][0]>0.5):
