@@ -13,6 +13,7 @@
 <vType length="0.7" width="0.3" color="blue" id="vieux-homme" impatience="0.7" maxSpeed="2.0" />
 <vType length="0.7" width="0.3" color="red" id="vielle-femme" impatience="0.7" maxSpeed="1.0" />
 
+<!-- Les routes du réseau -->
 <route edges="gneE0 gneE10 gneE8.45 gneE7 gneE7.47 gneE2.120" color="yellow" id="cices_citeKG"/>    
 <route edges="gneE0 gneE0.81 gneE0.329" color="green" id="cices_fann"/>    
 <route edges="gneE0 gneE10 gneE8.45 -gneE2.115" color="yellow" id="cices_mermoz"/>    

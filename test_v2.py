@@ -19,6 +19,7 @@ from keras.layers import LSTM
 from keras.layers import Dense
 from numpy import hstack
 
+
 if 'SUMO_HOME' in os.environ:
 	tools = os.path.join(os.environ['SUMO_Home'], 'tools')
 	sys.path.append(tools)
@@ -33,7 +34,7 @@ import traci.constants as tc
 import random
 import Pedestrian as ped
 import Rnn as rnn
-
+import csv
 class PedestrianManager(traci.StepListener):
 	def __init__(self, fromEdge, toEdge, pedestrianPrefixedID = 'person.1.', pedestrianProbability = 1.0, pedestrianNumberByStep = [1, 5]):
 		# traci.StepListener.__init__(self)
@@ -45,6 +46,7 @@ class PedestrianManager(traci.StepListener):
 		self.pedestrianProbability = pedestrianProbability
 		self.pedestrianNumberByStep = pedestrianNumberByStep
 		self.vehicles = {}
+		self.arrivedVeh=[]
 		self.allPedestrians=[]
 		self.dictAllPedestrian={}
 		self.waitPedestrians=[]
@@ -57,8 +59,30 @@ class PedestrianManager(traci.StepListener):
 		self.X, self.Y="",""
 		self.rnn = rnn.Rnn(self.data)
 		self.rnn.initializeLSTM()
-		# self.initializeLSTM()
 		self.te=0
+
+		self.co2=0
+		self.co=0
+		self.hc=0
+		self.nox=0
+		self.nox=0
+		self.pmx=0
+		self.noise=0
+		self.fuel=0
+		self.timeloss=0
+		self.waitingTime=0
+
+		self.DDDWaitingTime=0
+		self.taxiWaitingTime=0
+		self.tataWaitingTime=0
+		self.particulierWaitingTime=0
+		self.carrapideWaitingTime=0
+
+		self.DDDNb=0
+		self.taxiNb=0
+		self.tataNb=0
+		self.particulierNb=0
+		self.carrapideNb=0
 
 	def step(self, t = 0):
 		# Listening simulation's evolution
@@ -74,7 +98,6 @@ class PedestrianManager(traci.StepListener):
 		# The list of all vehicle ids waiting for insertion (with depart delay)
 		#pendingVehicles = traci.simulation.getPendingVehicles()
 		#print(str(arrivedIDList) + ' -- ' + str(departedIDList) + ' -- ' + str(loadedIDList) + ' -- ' + str(pendingVehicles) + ' -- ' + str(teleportIDList))
-		
 		for id in loadedIDList:
 			v = {}
 			v['depart'] = traci.simulation.getTime()
@@ -149,6 +172,7 @@ class PedestrianManager(traci.StepListener):
 			PMx = v['PMx']
 			fuel = v['fuel']
 			noise = v['noise']
+			v['arrivalTime']=arrival
 			idRoute = v['idRoute']
 			vType = v['vType']
 			waiting = v['waiting']
@@ -156,7 +180,31 @@ class PedestrianManager(traci.StepListener):
 			pos = v['pos']
 			speedWithoutTraCI = v['speedWithoutTraCI']
 			driverImperfection = v['driverImperfection']
-			#print(' --> ', id, ' : ', _id, ', eclass = ', eclass, ', Co2 = ', Co2, ', ',Co, ', ',Hc, ', ',NOx, ', ',PMx, ', ',fuel, ', ',noise, ', idRoute = ',idRoute, ', vType = ',vType, ', waiting = ',waiting, ', timeLoss = ',timeLoss, ', ',pos, ', speed = ',speed, ', speedWithoutTraCI = ',speedWithoutTraCI, ', depart = ',depart, ', arrival = ',arrival, ', departSpeed = ',departSpeed, ', personNumber = ',personNumber, ', driverImperfection = ',driverImperfection)
+			self.co2+=Co2
+			self.co+=Co
+			self.hc+=Hc
+			self.nox+=NOx
+			self.pmx+=PMx
+			self.fuel+=fuel
+			self.noise+=noise
+			self.timeloss+=timeLoss
+
+			if(vType=="DakarDemDikk"):
+				self.DDDWaitingTime+=traci.simulation.getTime()
+				self.DDDNb+=1
+			elif(vType=="TATA"):
+				self.tataWaitingTime+=traci.simulation.getTime()
+				self.tataNb+=1
+			elif(vType=="Taxi"):
+				self.taxiNb+=1
+				self.taxiWaitingTime+=traci.simulation.getTime()
+			elif(vType=="CarRapide"):
+				self.carrapideNb+=1
+				self.carrapideWaitingTime+=traci.simulation.getTime()
+			else:
+				self.particulierNb+=1
+				self.particulierWaitingTime+=traci.simulation.getTime()
+			# print(' --> ', id, ' : ', _id, ', eclass = ', eclass, ', Co2 = ', Co2, ', ',Co, ', ',Hc, ', ',NOx, ', ',PMx, ', ',fuel, ', ',noise, ', idRoute = ',idRoute, ', vType = ',vType, ', waiting = ',waiting, ', timeLoss = ',timeLoss, ', ',pos, ', speed = ',speed, ', speedWithoutTraCI = ',speedWithoutTraCI, ', depart = ',depart, ', arrival = ',arrival, ', departSpeed = ',departSpeed, ', personNumber = ',personNumber, ', driverImperfection = ',driverImperfection)
 			self.vehicles.pop(id, None)
 		# Adding new pedestrians
 		self.generatePedestrians()
@@ -167,12 +215,12 @@ class PedestrianManager(traci.StepListener):
 	
 	def generatePedestrians(self):
 		# Adding new pedestrians
-		#return
+		return
 		self.te+=1
-		print("###################### Etape "+str(self.te)+"  ##################################")
+		# print("###################### Etape "+str(self.te)+"  ##################################")
 		try:
 			rand = random.random()
-			
+			# print("CO2 : ", self.v['co2'])
 			if((rand < self.pedestrianProbability) and ((self.pedestrianPrefixedID != None) and (len(self.pedestrianPrefixedID)>0) and (self.pedestrianNumberByStep != None) and (len(self.pedestrianNumberByStep)>0))):
 				if(len(self.pedestrianNumberByStep) == 1):
 					#nb = self.pedestrianNumberByStep[0]
@@ -213,7 +261,14 @@ class PedestrianManager(traci.StepListener):
 				if(traci.person.getLanePosition(key)>=18.0):
 					traci.person.setSpeed(key, 0.0)
 					self.dictWaitPedestrian[key]=value
-		
+			# for i in range(len(self.allPedestrians)):
+			# 	if (traci.person.getLanePosition(self.allPedestrians[i])>=18.0):
+			# 		traci.person.setSpeed(self.allPedestrians[i],0.0)
+			# 		self.waitPedestrians.append(self.allPedestrians[i])
+				
+			# # On supprime les piétons en attentes dans la liste de tous les piétons
+
+
 			engaged=0			
 			for key, value in self.dictWaitPedestrian.items():
 				# print(str(len(self.waitPedestrians))+" sont en attentes")
@@ -229,14 +284,16 @@ class PedestrianManager(traci.StepListener):
 					dist = 174.68-traci.vehicle.getDistance(nearest_vehicle)  
 					# Vitesse du véhicule le plus proche des piétons
 					speed_vehicle = traci.vehicle.getSpeed(nearest_vehicle)
-					x_input = array([genre,value.age, value.waitingTime,speed_vehicle,dist, len(self.dictEngagePedestrians)])
-					print(genre,value.age, value.waitingTime,value.travelSpeed,dist, engaged)
+					# x_input = array([genre,value.age, value.waitingTime,speed_vehicle,dist, len(self.dictEngagePedestrians)])
+					#print(genre,value.age, value.waitingTime,value.travelSpeed,dist, engaged)
 					# x_input = x_input.reshape((1, 6, self.n_features))
 					# yhat = self.model.predict(x_input, verbose=0)
+					genre,age,neural_crossing_risk, neural_ped_influence, neural_ped_impatience=self.rnn.transformData(genre, age, value.waitingTime, speed_vehicle, dist,len(self.dictEngagePedestrians));
+					x_input = array([genre,age,neural_crossing_risk, neural_ped_influence, neural_ped_impatience])
 					yhat = self.rnn.predictPassage(x_input)
-					print(yhat)
-					print("\n\n-------")
-					if(yhat[0][0]>0.5):
+					#print(yhat)
+					#print("\n\n-------")
+					if(yhat[0][0]>0.8):
 						traci.person.setSpeed(key,3.0)
 						# self.dictEngagePedestrians[key]=value
 						del self.dictAllPedestrian[key]
@@ -308,11 +365,158 @@ def main():
 	step = 0
 	while(True):
 		traci.simulationStep()
-		if((step > 3) and (traci.simulation.getMinExpectedNumber() == 0)):
+		# print(traci.simulation.getEndTime())
+		# if((step > 3) and (traci.simulation.getMinExpectedNumber() == 0)):
+		if(traci.simulation.getTime()==3400):
 			break
 		step += 1
 	# Ending the simulation
-	print(' -- nbArrived = ', pedestrianManager.nbArrived)
+	# print(' -- nbArrived = ', pedestrianManager.nbArrived)
+	# print(' -- quantityCO2 = ', pedestrianManager.co2)
+	# print(' -- quantityCO = ', pedestrianManager.co)
+	# print(' -- quantityHC = ', pedestrianManager.hc)
+	# print(' -- quantityNox = ', pedestrianManager.nox)
+	# print(' -- quantityNoise = ', pedestrianManager.noise)
+	# print(' -- quantityFuel = ', pedestrianManager.fuel)
+	# print(' -- quantityFuel = ', pedestrianManager.fuel)
+	# print(' -- quantityTimeLoss = ', pedestrianManager.timeloss)
+	# print(' -- NbVehicles = ', len(pedestrianManager.vehicles))
+
+	qCO2_DDD = 0
+	qCO2_particulier=0
+	qCO2_carrapide=0
+	qCO2_taxi=0
+	qCO2_tata=0
+
+	qCO_DDD = 0
+	qCO_particulier=0
+	qCO_carrapide=0
+	qCO_taxi=0
+	qCO_tata=0
+
+	qHc_DDD = 0
+	qHc_particulier=0
+	qHc_carrapide=0
+	qHc_taxi=0
+	qHc_tata=0
+
+	qNox_DDD = 0
+	qNox_particulier=0
+	qNox_carrapide=0
+	qNox_taxi=0
+	qNox_tata=0
+
+	qNoise_DDD=0
+	qNoise_particulier=0
+	qNoise_carrapide=0
+	qNoise_taxi=0
+	qNoise_tata=0
+
+	qPmx_DDD=0
+	qPmx_particulier=0
+	qPmx_carrapide=0
+	qPmx_taxi=0
+	qPmx_tata=0
+	
+	arrival_time_DDD=0
+	arrival_time_particulier=0
+	arrival_time_carrapide=0
+	arrival_time_taxi=0
+	arrival_time_tata=0
+
+	for key, value in pedestrianManager.vehicles.items():
+		if(value['vType']=="DakarDemDikk"):
+			qCO2_DDD+=value['Co2']
+			qCO_DDD+=value['Co']
+			qHc_DDD+=value['Hc']
+			qNox_DDD+=value['NOx']
+			qNoise_DDD+=value['noise']
+			qPmx_DDD+=value['PMx']
+		elif(value['vType']=="TATA"):
+			qCO2_tata+=value['Co2']
+			qCO_tata+=value['Co']
+			qHc_tata+=value['Hc']
+			qNox_tata+=value['NOx']
+			qNoise_tata+=value['noise']
+			qPmx_tata+=value['PMx']
+		elif(value['vType']=="Taxi"):
+			qCO2_taxi+=value['Co2']
+			qCO_taxi+=value['Co']
+			qHc_taxi+=value['Hc']
+			qNox_taxi+=value['NOx']
+			qNoise_taxi+=value['noise']
+			qPmx_taxi+=value['PMx']
+		elif(value['vType']=="CarRapide"):
+			qCO2_carrapide+=value['Co2']
+			qCO_carrapide+=value['Co']
+			qHc_carrapide+=value['Hc']
+			qNox_carrapide+=value['NOx']
+			qNoise_carrapide+=value['noise']
+			qPmx_carrapide+=value['PMx']
+		else:
+			qCO2_particulier+=value['Co2']
+			qCO_particulier+=value['Co']
+			qHc_particulier+=value['Hc']
+			qNox_particulier+=value['NOx']
+			qNoise_particulier+=value['noise']
+			qPmx_particulier+=value['PMx']
+
+	ped_passing=True
+
+	header = ['id', 'vehicule', 'gaz', 'emission','ped']
+	data = [
+		[31,'tata','co2',int(qCO2_tata),ped_passing],
+		[32,'DDD','co2',int(qCO2_DDD),ped_passing],
+		[33,'taxi','co2',int(qCO2_taxi),ped_passing],
+		[34,'particulier','co2',int(qCO2_particulier),ped_passing],
+		[35,'carrapide','co2',int(qCO2_carrapide),ped_passing],
+
+		[36,'tata','co',int(qCO_tata),ped_passing],
+		[37,'DDD','co',int(qCO_DDD),ped_passing],
+		[38,'taxi','co',int(qCO_taxi),ped_passing],
+		[39,'particulier','co',int(qCO_particulier),ped_passing],
+		[40,'carrapide','co',int(qCO_carrapide),ped_passing],
+
+		[41,'tata','hc',int(qHc_tata),ped_passing],
+		[42,'DDD','hc',int(qHc_DDD),ped_passing],
+		[43,'taxi','hc',int(qHc_taxi),ped_passing],
+		[44,'particulier','hc',int(qHc_particulier),ped_passing],
+		[45,'carrapide','hc',int(qHc_carrapide),ped_passing],
+
+		[46,'tata','nox',int(qNox_tata),ped_passing],
+		[47,'DDD','nox',int(qNox_DDD),ped_passing],
+		[48,'taxi','nox',int(qNox_taxi),ped_passing],
+		[49,'particulier','nox',int(qNox_particulier),ped_passing],
+		[50,'carrapide','nox',int(qNox_carrapide),ped_passing],
+
+		[51,'tata','noise',int(qNoise_tata),ped_passing],
+		[52,'DDD','noise',int(qNoise_DDD),ped_passing],
+		[53,'taxi','noise',int(qNoise_taxi),ped_passing],
+		[54,'particulier','noise',int(qNoise_particulier),ped_passing],
+		[55,'carrapide','noise',int(qNoise_carrapide),ped_passing],
+
+		[56,'tata','pmx',int(qPmx_tata),ped_passing],
+		[57,'DDD','pmx',int(qPmx_DDD),ped_passing],
+		[58,'taxi','pmx',int(qPmx_taxi),ped_passing],
+		[59,'particulier','pmx',int(qPmx_particulier),ped_passing],
+		[60,'carrapide','pmx',int(qPmx_carrapide),ped_passing]
+	]
+
+	print("TIME TRAVEL DDD : ", pedestrianManager.DDDNb)
+	print("TIME TRAVEL TAXI : ", pedestrianManager.taxiNb)
+	print("TIME TRAVEL PARTICULIER : ", pedestrianManager.particulierNb)
+	print("TIME TRAVEL TATA : ", pedestrianManager.tataNb)
+	print("TIME TRAVEL CARRAPIDE : ", pedestrianManager.carrapideNb)
+
+	# with open('C:/csv/sumo_output.csv', 'a+', encoding='UTF8', newline='') as f:
+	# 	writer = csv.writer(f)
+
+	# 	# write the header
+	# 	writer.writerow(header)
+
+	# 	# write the data
+	# 	writer.writerows(data)
+	
 	try:
 		traci.close()
 	except Exception as exc:
