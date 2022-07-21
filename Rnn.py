@@ -45,7 +45,6 @@ class Rnn:
             x.append(crossing_risk)
             x.append(ped_influence)
             x.append(ped_impatience)
-
             # print(genre)
             # print(age)
             # print(crossing_risk)
@@ -95,22 +94,22 @@ class Rnn:
 
     def initializeLSTM(self):
         self.X, self.Y = self.getDataFromExcel()
-        # for i in range (len(self.X)):
-        #     print(self.X, self.Y)
-        # print(self.data.shape)
-
-        self.X = self.X.reshape((self.X.shape[0], self.X.shape[1], self.n_features))
-        self.model.add(LSTM(50, activation='relu', input_shape=(None, self.n_features)))
-        self.model.add(Dense(1))
-        self.model.compile(optimizer='adam', loss='mse')
-        self.model.summary()
-        self.model.fit(self.X, self.Y, epochs=200, verbose=0)
+        for i in range (len(self.X)):
+             print(self.X, self.Y)
+        print(self.data.shape)
+        #self.X = self.X.reshape((self.X.shape[0], self.X.shape[1], self.n_features))
+        #self.model.add(LSTM(50, activation='relu', input_shape=(None, self.n_features)))
+        #self.model.add(Dense(1))
+        #self.model.compile(optimizer='adam', loss='mse')
+        #self.model.summary()
+        #self.model.fit(self.X, self.Y, epochs=200, verbose=0)
 
         #Pour enregistrer un modèle
-        self.model.save("my_model")
-
+        #self.model.save("my_model")
         #Pour charger un modèle
-        #self.model = km.load_model("my_model")
+
+        self.model = km.load_model("my_model")
+        self.model.summary()
 
     def predictPassage(self, x_input):
         x_input = x_input.reshape(1,5, self.n_features)

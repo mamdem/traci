@@ -215,7 +215,7 @@ class PedestrianManager(traci.StepListener):
 	
 	def generatePedestrians(self):
 		# Adding new pedestrians
-		return
+		# return
 		self.te+=1
 		# print("###################### Etape "+str(self.te)+"  ##################################")
 		try:
@@ -293,7 +293,7 @@ class PedestrianManager(traci.StepListener):
 					yhat = self.rnn.predictPassage(x_input)
 					#print(yhat)
 					#print("\n\n-------")
-					if(yhat[0][0]>0.8):
+					if(yhat[0][0]>0.6):
 						traci.person.setSpeed(key,3.0)
 						# self.dictEngagePedestrians[key]=value
 						del self.dictAllPedestrian[key]
